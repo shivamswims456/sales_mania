@@ -317,7 +317,7 @@ class inv_document( get_session ):
             select_rule.append(rule)
 
 
-        criteria_string = f"{' AND '.join([str(each) for each in range(1, len(select_rule) + 1)])}"
+        criteria_string = f"({' AND '.join([str(each) for each in range(1, len(select_rule) + 1)])})"
 
         __for_urlencode = {"select_columns": select_columns, "filter_by":static_range_map[static_range]}
 
