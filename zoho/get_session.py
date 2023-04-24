@@ -55,8 +55,9 @@ class get_session(object):
 
         #fetch orgs for session validation
         try:
-            
-            self.validate_200(response = self.session.get(f"https://inventory.zoho.in/api/v1/activeorganizations?organization_id={self.org_id}"))
+
+            t = self.session.get(f"https://inventory.zoho.in/api/v1/activeorganizations?organization_id={self.org_id}")
+            self.validate_200(response = t)
 
         except Exception:
 
