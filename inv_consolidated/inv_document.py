@@ -349,8 +349,10 @@ class inv_document( get_session ):
 
         
 
-document = inv_document(login_store = os.path.join(os.getcwd(), "sales_mania", "pickel"), cache_store = os.path.join(os.getcwd(), "sales_mania", "cache"),  user_id = "it.kvtek@outlook.com", password = "IT4kvtek",\
-                  data_center = ".in", org_id = "60008720898")
+document = inv_document(login_store = os.path.join(os.getcwd(), "sales_mania", "pickel"),
+                        cache_store = os.path.join(os.getcwd(), "sales_mania", "cache"),
+                        user_id = "it.kvtek@outlook.com", password = "IT4kvtek",
+                        data_center = ".in", org_id = "60008720898")
 
 #print(document.get_document_count("items"))
 #print(document.get_document_page_n(document = "items", segment=10, round=1))
