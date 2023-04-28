@@ -36,6 +36,24 @@ class chart_of_accounts(models.Model):
     parent_account = models.ForeignKey("self", on_delete=models.CASCADE)
 
 
+
+
+class payment_terms(models.Model):
+
+  zid = models.PositiveBigIntegerField()
+  payment_terms_label = models.CharField(max_length=30)
+  expected_date = models.DateField()
+  zi_document = models.ForeignKey(zi_documents, on_delete=models.CASCADE) 
+
+
+
+class payment_modes(models.Model):
+
+    name = models.CharField(max_length=30)
+
+
+
+
 class comment_type(models.Model):
 
     name = models.CharField(max_length=45)
@@ -138,6 +156,36 @@ class dimensions(models.Model):
 
 
 
+class statues(models.Model):
+
+    zid = models.PositiveBigIntegerField()
+    name = models.CharField(45)
+    zi_document = models.ForeignKey(zi_documents, on_delete=models.CASCADE)
+    parent = models.ForeignKey("self", on_delete=models.CASCADE)
+
+
+
+
+
+
+class payment_gateway(models.Model):
+
+    zid = models.PositiveBigIntegerField()
+    payment_gateway = models.CharField(max_length=45)
+    settlement_status = models.ForeignKey(statues, on_delete=models.SET_NULL, null=True)
+  
+
+
+
+
+
+class gst_return_details(models.Model):
+
+    zid = models.PositiveBigIntegerField()
+    return_period = models.FloatField()
+    status = models.ForeignKey(statues, on_delete=models.SET_NULL, null=True)
+
+
 
 class default_tax_zones(models.Model):
 
@@ -196,14 +244,6 @@ class source(models.Model):
     zid = models.PositiveBigIntegerField()
     name = models.CharField(max_length=105)
     format = models.CharField(max_length=45)
-
-
-class statues(models.Model):
-
-    zid = models.PositiveBigIntegerField()
-    name = models.CharField(45)
-    zi_document = models.ForeignKey(zi_documents, on_delete=models.CASCADE)
-    parent = models.ForeignKey("self", on_delete=models.CASCADE)
 
 
 
@@ -317,6 +357,23 @@ class users(models.Model):
 
 
 
+
+class approvers(models.Model):
+
+    user = models.ForeignKey(users, on_delete=models.CASCADE)  
+    zi_document = models.ForeignKey(zi_documents, on_delete=models.CASCADE)
+    order = models.IntegerField()
+    has_approved = models.BooleanField()
+    approval_status = models.ForeignKey(statues, on_delete=models.SET_NULL, null=True)
+    is_next_approver = models.BooleanField()
+    submitted_date = models.DateField()
+    approved_date = models.DateField()
+    is_final_approver = models.BooleanField()
+  
+
+
+
+
 class warehouses(models.Model):
 
     zid = models.PositiveBigIntegerField()
@@ -340,6 +397,31 @@ class item_types(models.Model):
 class product_types(models.Model):
 
     name = models.CharField(max_length=12)
+
+
+
+class item_warehouse_stock(models.Model):
+
+    zid = models.PositiveBigIntegerField()
+    warehouse_id = models.ForeignKey(warehouses, on_delete=models.CASCADE) 
+    status = models.ForeignKey(statues, on_delete=models.SET_NULL, null=True)
+    warehouse_stock_on_hand = models.FloatField()
+    initial_stock = models.FloatField()
+    initial_stock_rate = models.FloatField()
+    warehouse_available_stock = models.FloatField()
+    warehouse_actual_available_stock = models.FloatField()
+    warehouse_committed_stock = models.FloatField()
+    warehouse_actual_committed_stock = models.FloatField()
+    warehouse_available_for_sale_stock = models.FloatField()
+    warehouse_actual_available_for_sale_stock = models.FloatField()
+    is_fba_warehouse = models.BooleanField()
+    sales_channel = models.ManyToManyField(sales_channels)
+    serial_numbers = models.JSONField()
+    batches = models.JSONField()
+
+
+
+
 
 
 class items(models.Model):
@@ -389,24 +471,195 @@ class items(models.Model):
     stock_on_hand = models.FloatField()
     asset_value = models.FloatField()
     available_stock = models.FloatField()
-    actual_available_stock
-    committed_stock
-    actual_committed_stock
-    available_for_sale_stock
-    actual_available_for_sale_stock
-    custom_fields
-    image_document_id
-    track_serial_number
-    track_batch_number
-    upc
-    ean
-    isbn
-    part_number
-    is_combo_product
-    sales_channels
-    warehouses
-    preferred_vendors
-    comments
-    package_details
-    __item_type
-    mapped_items
+    actual_available_stock = models.FloatField()
+    committed_stock = models.FloatField()
+    actual_committed_stock = models.FloatField()
+    available_for_sale_stock = models.FloatField()
+    actual_available_for_sale_stock = models.FloatField()
+    custom_fields = models.ManyToManyField(custom_fields) 
+    image_document_id = models.PositiveBigIntegerField()
+    track_serial_number = models.BooleanField()
+    track_batch_number = models.BooleanField()
+    upc = models.CharField(max_length=30)
+    ean = models.CharField(max_length=30)
+    isbn = models.CharField(max_length=30)
+    part_number = models.CharField(max_length=30)
+    is_combo_product = models.BooleanField()
+    sales_channels = models.ManyToManyField(sales_channels)
+    warehouses = models.ManyToManyField(item_warehouse_stock)  
+    preferred_vendors = models.ManyToManyField(contacts)
+    comments = models.ManyToManyField(comments)
+    package_details = models.ForeignKey(dimensions)
+    is_composite = models.BooleanField()
+    mapped_items = models.ManyToManyField("self")
+
+
+
+
+
+class bill_line_items(models.Model):
+
+  zid = models.PositiveBigIntegerField()
+  purchaseorder_item_id = models.PositiveBigIntegerField()
+  receive_item_id  = models.PositiveBigIntegerField()
+  item_id  = models.PositiveBigIntegerField()
+  itc_eligibility = models.CharField(max_length=45)
+  gst_treatment = models.ForeignKey(default_tax_zones, on_delete=models.SET_NULL, null=True)
+  is_combo_product = models.BooleanField()
+  warehouse_id = models.ForeignKey()
+  account_id = models.ForeignKey(chart_of_accounts, on_delete=models.SET_NULL, null=True)
+  description = models.CharField(max_length=105)
+  bcy_rate = models.FloatField()
+  rate = models.FloatField()
+  pricebook_id = models.PositiveBigIntegerField()
+  tags = models.ManyToManyField(tags)
+  quantity = models.FloatField()
+  discount = models.FloatField()
+  discounts = models.JSONField()
+  markup_percent = models.FloatField()
+  tax_id = models.ForeignKey(default_taxes, on_delete=models.CASCADE)
+  line_item_taxes = models.JSONField
+  item_total = models.FloatField()
+  item_total_inclusive_of_tax = models.FloatField()
+  item_order = models.IntegerField()
+  unit = models.ForeignKey(dimensions, on_delete=models.CASCADE)
+  product_type = models.ForeignKey(product_types, on_delete=models.CASCADE)
+  item_type = models.ForeignKey(item_types, on_delete=models.CASCADE)
+  has_product_type_mismatch = models.BooleanField()
+  reverse_charge_tax_id = models.ForeignKey(default_taxes, on_delete=models.SET_NULL, null=True)
+  is_billable = models.BooleanField()
+  is_landedcost = models.BooleanField()
+  customer_id = models.ForeignKey(users, on_delete=models.SET_NULL, null=True)
+  project_id = models.PositiveBigIntegerField()
+  item_custom_fields = models.ManyToManyField(custom_fields)
+  track_serial_for_receive = models.BooleanField()
+  track_batch_for_receive = models.BooleanField()
+  serial_numbers = models.JSONField()
+  batches = models.JSONField()
+  purchase_request_items  = models.JSONField()
+  
+
+
+
+
+class bill_payments(models.Model):
+
+    payment_id = models.PositiveBigIntegerField()
+    bill_id = models.PositiveBigIntegerField()
+    bill_payment_id = models.PositiveBigIntegerField()
+    payment_mode = models.ForeignKey(payment_modes, on_delete=models.CASCADE)
+    payment_number = models.CharField(max_length=30)
+    description = models.CharField(max_length=105)
+    date = models.DateField()
+    reference_number = models.CharField(max_length=30)
+    exchange_rate = models.FloatField()
+    amount = models.FloatField()
+    paid_through_account_id = models.ForeignKey(chart_of_accounts, on_delete=models.SET_NULL, null=True)
+    is_single_bill_payment = models.IntegerField()
+    is_paid_via_print_check = models.BooleanField()
+    check_number = models.CharField(max_length=30)
+    check_status = models.ForeignKey(statues, on_delete=models.SET_NULL, null=True)
+    is_ach_payment = models.BooleanField()
+    ach_payment_status = models.ForeignKey(statues, on_delete=models.SET_NULL, null=True)
+    gateway = models.ForeignKey(payment_gateway, on_delete=models.SET_NULL, null=True)   
+    ach_gw_transaction_id = models.CharField(max_length=45)
+    filed_in_vat_return_id = models.CharField(max_length=45)
+    filed_in_vat_return_name = models.CharField(max_length=45)
+    filed_in_vat_return_type = models.CharField(max_length=45)
+
+class bills(models.Model):
+
+    zid = models.PositiveBigIntegerField()
+    purchaseorder_ids = models.JSONField()
+    vendor_id = models.ForeignKey(contacts, on_delete=models.CASCADE)
+    source = models.ManyToManyField(source)
+    destination_of_supply = models.ForeignKey(state, on_delete=models.SET_NULL, null=True)
+    gst_no = models.CharField(max_length=20)
+    gst_treatment = models.ForeignKey(default_tax_zones, on_delete=models.SET_NULL, null=True)
+    tax_treatment = models.ForeignKey(default_tax_zones, on_delete=models.SET_NULL, null=True)
+    invoice_conversion_type = models.CharField(max_length=45)
+    unused_credits_payable_amount = models.FloatField()
+    gst_return_details = models.ForeignKey(gst_return_details, on_delete=models.SET_NULL, null=True)
+    status = models.ForeignKey(statues, on_delete=models.SET_NULL, null=True)
+    color_code = models.CharField(max_length=30)
+    current_sub_status_id = models.ForeignKey(statues, on_delete=models.SET_NULL, null=True)
+    sub_statuses = models.JSONField()
+    bill_number = models.CharField(max_length=30)
+    date = models.DateField()
+    is_pre_gst = models.BooleanField()
+    due_date = models.DateField()
+    discount_setting = models.CharField(max_length=30)
+    is_tds_amount_in_percent = models.BooleanField()
+    tds_percent = models.FloatField()
+    tds_amount = models.FloatField()
+    tax_account_id = models.ForeignKey()
+    payment_terms = models.ManyToManyField(payment_terms)
+    reference_number = models.CharField(max_length=30)
+    recurring_bill_id = models.PositiveBigIntegerField()
+    due_by_days = models.IntegerField()
+    due_in_days = models.IntegerField()
+    currency_id = models.ForeignKey(currency, on_delete=models.SET_NULL, null=True)
+    price_precision = models.IntegerField()
+    exchange_rate = models.FloatField()
+    custom_fields = models.ManyToManyField(custom_fields)
+    is_viewed_by_client = models.BooleanField()
+    client_viewed_time = models.DateTimeField()
+    is_tds_applied = models.BooleanField()
+    is_item_level_tax_calc = models.BooleanField()
+    is_inclusive_tax = models.BooleanField()
+    tax_rounding = models.CharField(max_length=30)
+    filed_in_vat_return_id = models.CharField(max_length=45)
+    is_reverse_charge_applied = models.BooleanField()
+    is_uber_bill = models.BooleanField()
+    is_tally_bill = models.BooleanField()
+    mark_as_received_status = models.CharField(max_length=45)
+    is_standalone_bill = models.BooleanField()
+    track_discount_in_account = models.BooleanField()
+    submitted_date = models.DateField()
+    submitted_id = models.ForeignKey(users, on_delete=models.SET_NULL, null=True)
+    approver_id = models.ForeignKey(users, on_delete=models.SET_NULL, null=True)
+    adjustment = models.FloatField()
+    adjustment_description = models.CharField(max_length=105)
+    discount_amount = models.FloatField()
+    discount = models.FloatField()
+    discount_applied_on_amount = models.FloatField()
+    is_discount_before_tax = models.BooleanField()
+    discount_account_id = models.PositiveBigIntegerField()
+    discount_account_name = models.CharField(max_length=105)
+    discount_type = models.CharField(max_length=45)
+    sub_total = models.FloatField()
+    sub_total_inclusive_of_tax = models.FloatField()
+    tax_total = models.FloatField()
+    total = models.FloatField()
+    payment_made = models.FloatField()
+    vendor_credits_applied = models.FloatField()
+    is_line_item_invoiced = models.BooleanField()
+    purchaseorders = models.JSONField()
+    taxes = models.JSONField()
+    tax_override = models.BooleanField()
+    balance = models.JSONField()
+    created_time = models.DateTimeField()
+    created_by_id = models.ForeignKey(users, on_delete=models.SET_NULL, null=True)
+    last_modified_id = models.ForeignKey(users, on_delete=models.SET_NULL, null=True)
+    last_modified_time = models.DateTimeField()
+    warn_create_vendor_credits = models.BooleanField()
+    reference_id = models.CharField(max_length=30)
+    notes = models.CharField(max_length=145)
+    terms = models.CharField(max_length=145)
+    open_purchaseorders_count = models.IntegerField() 
+    un_billed_items = models.ForeignKey(items)
+    invoices = models.JSONField()
+    is_approval_required = models.BooleanField()
+    can_create_bill_of_entry = models.BooleanField()
+    allocated_landed_costs = models.JSONField()
+    unallocated_landed_costs = models.JSONField()
+    entity_type = models.CharField(max_length=45)
+    credit_notes = models.JSONField()
+    payments = models.ManyToManyField(bill_payments) 
+    reference_bill_id = models.PositiveBigIntegerField()
+    can_send_in_mail = models.BooleanField()
+    approvers_list = models.ManyToManyField(approvers)
+    line_items = models.ManyToManyField(bill_line_items) 
+    billing_address = models.ForeignKey(addresses, on_delete=models.SET_NULL, null=True)
+    comments = models.ManyToManyField(comments)
+
