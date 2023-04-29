@@ -421,9 +421,6 @@ class item_warehouse_stock(models.Model):
 
 
 
-
-
-
 class items(models.Model):
 
     zid = models.PositiveBigIntegerField()
@@ -491,7 +488,7 @@ class items(models.Model):
     comments = models.ManyToManyField(comments)
     package_details = models.ForeignKey(dimensions)
     is_composite = models.BooleanField()
-    mapped_items = models.ManyToManyField("self")
+    
 
 
 
@@ -538,6 +535,74 @@ class bill_line_items(models.Model):
   batches = models.JSONField()
   purchase_request_items  = models.JSONField()
   
+
+
+class composite_items(models.Model):
+
+    zid = models.PositiveBigIntegerField()
+    name = models.CharField(max_length=105)
+    unit = models.ForeignKey(measuring_unit, on_delete=models.SET_NULL, null=True)
+    category_id = models.PositiveBigIntegerField()
+    offline_created_date_with_time = models.DateTimeField()
+    show_in_storefront = models.BooleanField()
+    brand = models.CharField(max_length=45)
+    manufacturer = models.CharField(max_length=45)
+    product_description = models.CharField(max_length=105)
+    product_tags = models.ManyToManyField(tags)
+    product_short_description = models.CharField(max_length=105)
+    hsn_or_sac = models.CharField(max_length=30)
+    description = models.CharField(max_length=105)
+    tax_id = models.ForeignKey(default_taxes)
+    is_taxable = models.BooleanField()
+    tax_exemption_id = models.ForeignKey(default_tax_exemption, on_delete=models.SET_NULL, null=True)
+    product_type = models.ForeignKey(product_types, on_delete=models.SET_NULL, null=True)
+    taxability_type = models.ForeignKey(default_tax_types, on_delete=models.SET_NULL, null=True)
+    purchase_account_id = models.ForeignKey(chart_of_accounts, on_delete=models.SET_NULL, null=True)
+    account_id = models.ForeignKey(chart_of_accounts, on_delete=models.SET_NULL, null=True)
+    inventory_account_id = models.ForeignKey(chart_of_accounts, on_delete=models.SET_NULL, null=True)
+    tags = models.ManyToManyField(tags)
+    status = models.ForeignKey(statues, on_delete=models.SET_NULL, null=True)
+    source = models.ForeignKey(source, on_delete=models.SET_NULL, null=True)
+    is_combo_product = models.BooleanField()
+    is_boxing_exist = models.BooleanField()
+    item_type = models.ForeignKey(item_types, on_delete=models.SET_NULL, null=True)
+    rate = models.FloatField()
+    label_rate = models.FloatField()
+    pricebook_rate = models.FloatField()
+    pricebook_discount = models.FloatField()
+    purchase_rate = models.FloatField()
+    sales_rate = models.FloatField()
+    reorder_level = models.FloatField()
+    is_returnable = models.BooleanField()
+    initial_stock = models.FloatField()
+    initial_stock_rate= models.FloatField()
+    total_initial_stock = models.FloatField()
+    vendor_id = models.ForeignKey(users, on_delete=models.SET_NULL, null=True)
+    stock_on_hand = models.FloatField()
+    asset_value = models.FloatField()
+    available_stock = models.FloatField()
+    actual_available_stock = models.FloatField()
+    committed_stock = models.FloatField() 
+    actual_committed_stock = models.FloatField()
+    available_for_sale_stock = models.FloatField()
+    actual_available_for_sale_stock = models.FloatField()
+    track_serial_number = models.FloatField()
+    track_batch_number = models.FloatField()
+    sku = models.CharField(max_length=45)
+    upc = models.CharField(max_length=45)
+    ean = models.CharField(max_length=45)
+    isbn = models.CharField(max_length=45)
+    part_number = models.CharField(max_length=45)
+    purchase_description = models.CharField(max_length=105)
+    custom_fields 
+    last_modified_time = models.DateTimeField()
+    package_details = models.ForeignKey(dimensions, on_delete=models.SET_NULL, null=True)
+    mapped_items = models.ManyToManyField(items)
+    sales_channels = models.ManyToManyField(sales_channels)
+    warehouses = models.ManyToManyField(item_warehouse_stock)
+    preferred_vendors = models.ManyToManyField(contacts)
+    comments = models.ManyToManyField(comments)
+
 
 
 
@@ -782,3 +847,107 @@ class invoices(models.Model):
     tax_reg_no  = models.CharField(max_length=45)
     tax_treatment  = models.ForeignKey(default_tax_zones, on_delete=models.SET_NULL, null=True)
     tax_rounding = models.FloatField()
+
+
+
+class transfer_order_warehouses(models.Model):
+
+    warehouse_id = models.ForeignKey(warehouses, on_delete=models.CASCADE)
+    attention = models.CharField(max_length=45)
+    address = models.ForeignKey(addresses, on_delete=models.CASCADE)
+    is_primary = models.BooleanField()
+    status = models.ForeignKey(statues, on_delete=models.SET_NULL, null=True)
+    is_fba_warehouse = models.BooleanField()
+    sales_channels = models.ManyToManyField(sales_channels)
+
+
+
+class line_items_to(models.Model):
+
+    line_item_id = models.PositiveBigIntegerField()
+    item_id = models.PositiveBigIntegerField()
+    item_order = models.IntegerField()
+    name = models.CharField(max_length=45)
+    description = models.CharField(max_length=105)
+    quantity_transfer = models.FloatField()
+    price = models.FloatField()
+    asset_price = models.FloatField()
+    unit = models.ForeignKey(measuring_unit, on_delete=models.CASCADE)
+    quantity_decimal_place = models.IntegerField*()
+    sku = models.CharField(max_length=45)
+    serial_numbers = models.JSONField()
+    batches = models.JSONField()
+
+
+
+class transfer_orders(models.Model):
+
+    zid = models.PositiveBigIntegerField()
+    from_warehouse_id = models.ForeignKey(warehouses, on_delete=models.CASCADE)
+    to_warehouse_id = models.ForeignKey(warehouses, on_delete=models.CASCADE)
+    date = models.DateField()
+    transferred_date = models.DateField()
+    description = models.CharField(max_length=45)
+    transfer_order_number = models.CharField(max_length=30)
+    created_by_id = models.ForeignKey(users, on_delete=models.SET_NULL, null=True)
+    last_modified_by_id = models.ForeignKey(users, on_delete=models.SET_NULL, null=True)
+    status = models.ForeignKey(statues, on_delete=models.SET_NULL, null=True)
+    submitter_id = models.ForeignKey(users, on_delete=models.SET_NULL, null=True)
+    approver_id = models.ForeignKey(users, on_delete=models.SET_NULL, null=True)
+    submitted_date = models.DateField()
+    submitted_by = models.ForeignKey(users, on_delete=models.SET_NULL,null=True)
+    line_items = models.ManyToManyField(line_items_to)
+    comments = models.ManyToManyField(comments)
+    custom_fields = models.ManyToManyField(custom_fields)
+    tracking_number = models.CharField(max_length=45)
+    tracking_link = models.URLField()
+    carrier = models.CharField(max_length=45)
+    is_tracking_enabled = models.BooleanField()
+    tracking_statuses = models.ForeignKey(statues, on_delete=models.CASCADE)
+    created_time = models.DateTimeField()
+    last_modified_time = models.DateTimeField()
+    warehouses = models.ForeignKey(transfer_order_warehouses, on_delete=models.CASCADE)
+
+
+
+class line_items_adjustment_qty(models.Model):
+
+    zid = models.PositiveBigIntegerField()
+    item_id = models.ForeignKey(items, on_delete=models.CASCADE)
+    item_order = models.IntegerField()
+    adjustment_account_id = models.ForeignKey(chart_of_accounts, on_delete=models.SET_NULL, null=True)
+    asset_account_id = models.ForeignKey(chart_of_accounts, on_delete=models.SET_NULL, null=True)
+    quantity_adjusted = models.ForeignKey(chart_of_accounts, on_delete=models.SET_NULL, null=True)
+    serial_numbers = models.JSONField()
+    batches = models.JSONField()
+    warehouse_id = models.ForeignKey(warehouses, on_delete=models.CASCADE)
+    tags = models.ManyToManyField(tags)
+
+
+
+
+class adjustments(models.Model):
+
+    """     
+        adjustments by value has not been implemented
+    """
+
+    zid = models.PositiveBigIntegerField()
+    date = models.DateField()
+    adjustment_account_id = models.ForeignKey(chart_of_accounts, on_delete=models.CASCADE)
+    reason = models.CharField(max_length=105)
+    description = models.CharField(max_length=105)
+    status = models.ForeignKey(statues, on_delete=models.CASCADE)
+    reference_number = models.CharField(max_length=45)
+    adjustment_type = models.CharField(max_length=45)
+    line_items = models.ManyToManyField(line_items_adjustment_qty)
+    comments = models.ManyToManyField(comments)
+    total = models.FloatField()
+    warehouse_id = models.ForeignKey(warehouses, on_delete=models.CASCADE)
+    created_time = models.DateTimeField()
+    last_modified_time = models.DateTimeField()
+    created_by_id = models.DateTimeField()
+    last_modified_by_id = models.ForeignKey(users, on_delete=models.SET_NULL, null=True)
+    custom_fields = models.ManyToManyField(custom_fields)
+
+
